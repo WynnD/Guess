@@ -8,3 +8,5 @@ SOURCES += main.c
 include(deployment.pri)
 qtcAddDeployment()
 
+HEADERS += main.h
+

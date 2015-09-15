@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "main.h"
 
 /* ------------------------------------------------
  * Basic Calculator with + - / *
@@ -7,7 +8,7 @@
  * System: Windows 10, Qt Creator
  * Author: Wynn Drahorad
  *
- * ToDo: Store previous guesses in an arrays
+ * ToDo: Debug initialization, beautify variable names
  * -------------------------------------------------
  */
 
@@ -15,33 +16,33 @@
 
 int main(void)
 {
-    // print header
-    printf("Author: Wynn Drahorad\nLab: Tues 9am\nProgram #1: Guess01\n");
 
     // variable declarations
-    int userGuess; int forecast; int score; int last; int last1; int last2;
+    int userGuess; int computerForecast; int score; int lastGuess; int secondMostRecentGuess; int thirdMostRecentGuess; int turn_counter;
     int move_table[2][2][2][2] = {{{{0}}}}; // FOUR DIMENSIONAL ARRAY OMG
 
-    /*
-     * int when0[2] = {0};
-     * int when1[2] = {0};
-    */
 
     score = 0;
     userGuess = 0;
-    last = 0; // most recent
-    last1 = 0; // second most recent
-    last2 = 0; // third most recent
-    forecast = getRand();
+    lastGuess = 0; // most recent
+    secondMostRecentGuess = 0; // second most recent
+    thirdMostRecentGuess = 0; // third most recent
+    turn_counter = 0;
+
+    // print header
+    printf("Program #1: 0 or 1 number guessing game \nAuthor: Wynn Drahorad\nLab: Tues 9am\nInstructions:\nFor each move the computer will forecast what it thinks you will enter.\nWhen prompted you then enter 0 or 1.  The computer forecast and your\ninput will be compared.  If the computer got it right, the score is\ndecremented.  If the computer got it wrong, the score is incremented.\nThe score starts at 0.  If it reaches -10 the computer wins.\nIf it reaches 10, the human wins!  Good luck, you'll need it!");
 
 
     /* start game */
 
     // start game loop
-    while (score < 10 && score > -10) {
-
-        // set forecast to most probable
-        forecast = mostProb(move_table, last, last1, last2);
+    while ( score < 10 && score > -10 ) {
+        // set computerForecast to most probable, using move table after turn 2
+        if (turn_counter > 2) {
+            computerForecast = findMostProbable(move_table, lastGuess, secondMostRecentGuess, thirdMostRecentGuess);
+        } else {
+            computerForecast = getRand();
+        }
 
         // display score to user
         displayScore(score);
@@ -51,23 +52,35 @@ int main(void)
             userGuess = getUserGuess();
         } while (userGuess == -1); // handle inputs other than 1 or 0
 
-        // print total table (used for debugging)
-        print_table(move_table);
+        if (turn_counter > 2) {
+            // add new userGuess data to prediction table
+            ++move_table[lastGuess][secondMostRecentGuess][thirdMostRecentGuess][userGuess];
 
-        if (userGuess == forecast) {
+            printMoveTable(move_table); // uncomment this line if you want to see the move_table
+        }
+
+        if (userGuess == computerForecast) {
             --score;
         } else {
             ++score;
         }
 
-        // add userGuess data to prediction table
-        move_table[last][last1][last2][userGuess]++;
 
-        // store last user guesses, shift older guesses
-        last2 = last1;
-        last1 = last;
-        last = userGuess;
+
+        // store lastGuess user guesses, shift older guesses
+        thirdMostRecentGuess = secondMostRecentGuess;
+        secondMostRecentGuess = lastGuess;
+        lastGuess = userGuess;
+        ++turn_counter;
     }
+
+    if (score > 10) {
+        printf("How did you win? Congratulations! (... But seriously how?)\n");
+    } else {
+        printf("Sorry, you lost!\n");
+    }
+
+    return 0; // to appease the C gods
 }
 
 
@@ -105,27 +118,27 @@ int getRand() {
 }
 
 
-int mostProb(int array[][2][2][2], int last, int last1, int last2) {
+int findMostProbable(int array[][2][2][2], int lastGuess, int secondMostRecentGuess, int thirdMostRecentGuess) {
     // finds most probable prediction
 
     int guess;
 
-    int zeroCount = array[last][last1][last2][0];
-    int oneCount = array[last][last1][last2][1];
+    int zeroCount = array[lastGuess][secondMostRecentGuess][thirdMostRecentGuess][0];
+    int oneCount = array[lastGuess][secondMostRecentGuess][thirdMostRecentGuess][1];
 
     if (zeroCount > oneCount) {
         guess =  0;
     } else if (zeroCount < oneCount) {
         guess = 1;
     } else {
-        guess = (int) !last; // return opposite of user input if counts are equal
+        guess = (int) !lastGuess; // return opposite of user input if counts are equal
     }
 
     return guess;
 }
 
 
-void print_table(int array[2][2][2][2]) {
+void printMoveTable(int array[2][2][2][2]) {
     // prints current tally table -- useful for debugging, and proof of concept!
 
     int i; int j; int k; int l;
@@ -135,7 +148,7 @@ void print_table(int array[2][2][2][2]) {
     for (i = 0; i < 2; i++) {
         for (j = 0; j < 2; j++) {
             for (k = 0; k < 2; k++) {
-                printf("| %d | %d | %d |     ----->     |", i,j,k);
+                printf("| %d | %d | %d |     ----->     |", k,j,i);
                 for (l = 0; l < 2; l++) {
                     printf(" %d |", array[i][j][k][l]);
                 }

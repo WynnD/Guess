@@ -2,7 +2,7 @@
 #include "main.h"
 
 /* ------------------------------------------------
- * Basic Calculator with + - / *
+ * Guess 01 - Beat the Computer
  *
  * Class: CS 141, Fall 2015.  Tuesday 9am lab.
  * System: Windows 10, Qt Creator
